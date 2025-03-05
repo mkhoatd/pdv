@@ -14,7 +14,7 @@
                     zls
                 ];
                 shellHook = ''
-                    sudo xcode-select --switch /Applications/Xcode.app
+                    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
                 '';
             };
     };

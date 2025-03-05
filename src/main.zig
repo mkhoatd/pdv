@@ -195,7 +195,7 @@ test "doesn't crash" {
 
     var safer_data = safe_data.expand(.{AllEven});
     var even_data = safer_data.restrict(.{AllEven});
-    var even_val = even_data.extract(.{AllEven});
+    const even_val = even_data.extract(.{AllEven});
 
     try std.testing.expectEqual(
         Constraint([]u8, .{ NonEmpty, AllPositive, AllEven }),
