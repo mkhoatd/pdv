@@ -1,8 +1,11 @@
 const std = @import("std");
 const testing = std.testing;
 
-fn naive_memoize(comptime _: anytype) type {
-    return opaque {};
+fn naive_memoize(comptime T: anytype) type {
+    const Wrapper = struct {
+        pub const inner = T;
+    };
+    return Wrapper;
 }
 
 test "structural equality sanity check" {
@@ -35,21 +38,10 @@ test "structural equality sanity check" {
     try testing.expect(naive_memoize(c) != naive_memoize(e));
 }
 
-// TODO: kind of hacky and prone to misuse?
-fn type_id_gen(comptime _: anytype) type {
-    comptime var count: usize = 0;
-    return struct {
-        pub fn idx(comptime T: anytype) usize {
-            _ = T;
-            defer count += 1;
-            return count;
-        }
-    };
-}
-
-fn type_lt(comptime lhs: anytype, comptime rhs: anytype) bool {
-    comptime var id_gen = type_id_gen(0);
-    return id_gen.idx(lhs) < id_gen.idx(rhs);
+// The core issue is that we need a consistent way to compare types
+// We'll use @typeName as a string to compare them lexicographically
+fn type_lt(comptime lhs: type, comptime rhs: type) bool {
+    return std.mem.lessThan(u8, @typeName(lhs), @typeName(rhs));
 }
 
 // TODO: sorting and comptime slices of types don't play well in the stdlib.
@@ -97,8 +89,11 @@ test "type sort" {
 
 pub inline fn Constraint(comptime wrapped: type, comptime types: anytype) type {
     comptime var idx: [types.len]type = undefined;
-    for (idx[0..], types) |*x, T|
-        x.* = T;
+    comptime {
+        for (0..types.len) |i| {
+            idx[i] = types[i];
+        }
+    }
     return _Constraint(wrapped, sorted_types(types.len, idx));
 }
 
